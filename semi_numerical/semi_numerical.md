@@ -82,7 +82,7 @@ $$
 2) Use $x * y mod(z)= (x mod(z) * y mod (z))mod(z)$ to expand expression 
 ![Mod](./modexpression.png)
 
-3) Evalute using $2^{i} = (2^{i-1}mod(z) * 2^{i-1}mod(z))mod(z)$
+3) Evalute using $a^{i} \mod z= (a^{i-1}mod(z) * a^{i-1}mod(z))mod(z)$
 ![full](./fullcomp.png)
 
 ## Primality Testing 
@@ -136,14 +136,101 @@ $$
 
 ### Miller Rabin 
 
-Miller Rabin primality testing is a stricter extension to FLT based on 2 modifications 
-1) Several randomly chosen values of `a` 
-2) Uses key observations that reduces the chance of falsely calling a 'composite' number as a 
-'probably prime'
+The algorithm tests a series of values to determine if an $n$ is prime. 
+This property is derived based on Fermats Theorem and Roots of Unity. 
 
-These observations are: 
-1) If `n` is an odd number then `n-1` is even and can always be represented as 
+#### Derivation 
+
+If $n$ is an odd number then an even number $n-1$ can be written as: 
+
 $$
-n - 1 = 2^s * t , \quad t \quad is \quad odd \quad \geq 1
+n-1 = 2^s * t 
 $$
 
+Then 
+
+$$
+a^{n-1} = a^{2^s * t}
+$$
+
+$$
+a^{n-1} \mod n  = a^{2^s * t} \mod n 
+$$
+
+$a$ is some variable and $n$ is the prime number we are verifying. 
+
+Try to compute $a^{n-1} \mod n$ using modular exponentiation 
+
+$$
+x_{s} = a^{2^s * t} \mod n
+$$
+
+$$
+x_{s-1} = a^{2^{s-1} * t} \mod n
+$$
+
+$$
+\vdots
+$$
+
+$$
+x_{0}
+$$
+
+See that we can use the following property 
+
+$$
+a^{i} \mod z= (a^{i-1}mod(z) * a^{i-1}mod(z))mod(z)
+$$
+
+Then 
+
+$$
+x_{s} = (x_{s-1})^2 \mod n 
+$$
+
+Then 
+>By Fermats: 
+
+$$
+x_s = a^{2^s × t} \mod n = a^{n-1} \mod n
+\\
+a^{n-1} \equiv 1 \mod n
+$$
+Hence, $x_s = 1$
+
+
+>By roots of unity: 
+
+$$
+x_{s} = (x_{s-1})^2 \mod n 
+$$
+
+$$ 
+ (x_{s-1})^2 \equiv x_{s}  \mod n 
+$$
+
+$$
+x_s = 1 
+$$ 
+AND 
+$$
+(x_{s-1})^2 \equiv 1 \mod n 
+\\
+(x_{s-1}) = \pm 1
+$$
+Where $n$ is a prime non-even number 
+
+#### Explanation 
+
+For each witness $a$:
+
+If $x_s \not\equiv 1 \pmod{n}$ → Composite (Fermat failure)
+
+If $x_s \equiv 1 \pmod{n}$ and $x_{s-1} \not\equiv \pm 1 \pmod{n}$ → Composite (Square roots failure)
+
+If $x_s \equiv 1 \pmod{n}$ and $x_{s-1} \equiv -1 \pmod{n}$ → Pass (continue to next witness)
+
+If all $x_j \equiv 1 \pmod{n}$ in sequence → Pass (continue to next witness)
+
+If all $k$ witnesses pass → Probably prime
